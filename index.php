@@ -3,40 +3,32 @@ session_start();
 include("db.php");
 include("header.php");
 
-$hash = '$2y$10$KIXpFqXFF8z14PavNPtOD.h9GzqO3of8xFs.7lRM3wW7hVzL0qI8W'; // el de tu BD
-
-var_dump(password_verify("123456", $hash)); // debería dar true
-var_dump(password_verify("12345", $hash));  // debería dar false
-
-var_dump(password_verify("123456", $hash)); // debería dar true
-var_dump(password_verify("12345", $hash));  // debería dar false
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $contra = $_POST['contrasenha'];
-  
+   // $hash = password_hash($contra, PASSWORD_DEFAULT);
 
     $sql = "SELECT us.* FROM gestionar_tareas.usuarios us WHERE us.email='$email'";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
         $usuario = $result->fetch_assoc();
-      
+
+       /*  echo "<pre>".$usuario['contrasenha']."</pre>";
+        echo "<pre>".password_hash($contra, PASSWORD_DEFAULT)."</pre>";
+        //var_dump(password_verify($contra, $usuario['contrasenha'])); */
        
-          if (password_verify($contra, $usuario['contrasenha']) || $hash==$usuario['contrasenha']) {
+          if (password_verify($contra, $usuario['contrasenha'])) {
             $_SESSION['usuario_id'] = $usuario['id'];
             $_SESSION['nombre'] = $usuario['nombre'];
             header("Location: tareas.php");
             exit();
         } else {
              $error = "Contraseña incorrecta";
-            /*  header("Location: index.php");
-            exit(); */
         }
     } else {
             $error = "Usuario no encontrado";
-            /* header("Location: index.php");
-            exit(); */
     }
    
 }
@@ -82,6 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
         <?php endif; ?>
         <?php $error = ""; ?>
+        </div>
     </div>
 </div>
 

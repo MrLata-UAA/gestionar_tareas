@@ -6,32 +6,64 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 include("header.php");
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $titulo = $_POST['titulo'];
     $descripcion = $_POST['descripcion'];
-    $fecha_incio = $_POST['inicio'];
+    $fecha_inicio = $_POST['inicio'];
     $fecha_limite = $_POST['limite'];
     $usuario_id = $_SESSION['usuario_id'];
-    $estado = $_POST['estado']; 
-    $fecha_created = date('Y-m-d', strtotime($fecha_incio));
-    $fecha_updated = date('Y-m-d', strtotime($fecha_limite));
+    $estado = $_POST['estado'];
+    $fecha_created = date("Y-m-d H:i:s");
+    $fecha_updated = date("Y-m-d H:i:s");
 
-   echo "Estado: '$estado'<br/>";
+    if (empty($titulo)) {
+        $error = "El título es obligatorio.";
+    } elseif (strlen($titulo) > 255) {
+        $error = "El título no puede tener más de 255 caracteres.";
+    }
 
-    // Asumiendo $conn es tu conexión MySQLi
-    $sql= "INSERT INTO tareas (usuario_id, titulo, descripcion, estado, fecha_inicio, fecha_limite, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isssss", $usuario_id, $titulo, $descripcion, $estado, $fecha_inicio, $fecha_limite, $fecha_created, $fecha_updated);
-    if ($stmt->execute()) {
-        echo "Tarea insertada correctamente";
-        header("Location: tareas.php");
-        exit();
-    } else {
-        echo "Error: " . $stmt->error;
+    // Validar descripción
+    elseif (!empty($descripcion) && strlen($descripcion) > 1000) {
+        $error = "La descripción no puede superar los 1000 caracteres.";
+    }
+
+    // Validar fechas
+    elseif (empty($fecha_inicio) || empty($fecha_limite)) {
+        $error = "Ambas fechas son obligatorias.";
+    } elseif (strtotime($fecha_inicio) > strtotime($fecha_limite)) {
+        $error = "La fecha de inicio no puede ser mayor que la fecha límite.";
+    }
+
+    // Validar estado
+    elseif (!in_array($estado, ['pendiente', 'en progreso', 'completada'])) {
+        $error = "Estado de tarea inválido.";
+    }
+
+    // Si no hay errores, insertar en la base
+    if (empty($error)) {
+        // Asumiendo $conn es tu conexión MySQLi
+        $sql = "INSERT INTO tareas (usuario_id, titulo, descripcion, estado, fecha_inicio, fecha_limite, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("isssssss", $usuario_id, $titulo, $descripcion, $estado, $fecha_inicio, $fecha_limite, $fecha_created, $fecha_updated);
+        if ($stmt->execute()) {
+            echo "Tarea insertada correctamente";
+            header("Location: tareas.php");
+            exit();
+        } else {
+            echo "Error: " . $stmt->error;
+        }
     }
 }
 ?>
+<div class="card mb-4 shadow-sm">
+  <div class="card-body d-flex justify-content-between align-items-center">
+    <h2 class="display-6 mb-0">✏️ Editor: <?php echo $_SESSION['nombre']; ?></h2>
+    <a href="tareas.php" class="btn btn-outline-secondary">🔙 Volver a tareas</a>
+  </div>
+</div>
+
+
+
 
 <div class="row justify-content-center">
     <div class="col-md-6">
@@ -98,31 +130,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
-  const select = document.getElementById('estado');
+    const select = document.getElementById('estado');
 
-  function actualizarColor() {
-    // Limpiar clases de color
-    select.classList.remove('bg-warning', 'bg-info', 'bg-success', 'text-dark', 'text-white');
+    function actualizarColor() {
+        // Limpiar clases de color
+        select.classList.remove('bg-warning', 'bg-info', 'bg-success', 'text-dark', 'text-white');
 
-    // Aplicar según el valor
-    switch(select.value) {
-      case 'pendiente':
-        select.classList.add('bg-warning', 'text-dark');
-        break;
-      case 'en progreso':
-        select.classList.add('bg-info', 'text-white');
-        break;
-      case 'completada':
-        select.classList.add('bg-success', 'text-white');
-        break;
+        // Aplicar según el valor
+        switch (select.value) {
+            case 'pendiente':
+                select.classList.add('bg-warning', 'text-dark');
+                break;
+            case 'en progreso':
+                select.classList.add('bg-info', 'text-white');
+                break;
+            case 'completada':
+                select.classList.add('bg-success', 'text-white');
+                break;
+        }
     }
-  }
 
-  // Inicial
-  actualizarColor();
+    // Inicial
+    actualizarColor();
 
-  // Cambiar al seleccionar otra opción
-  select.addEventListener('change', actualizarColor);
+    // Cambiar al seleccionar otra opción
+    select.addEventListener('change', actualizarColor);
 </script>
 
 <?php include("footer.php"); ?>
