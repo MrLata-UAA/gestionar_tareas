@@ -2,6 +2,13 @@
 session_start();
 include("db.php");
 include("header.php");
+$error = [];
+$icons = [
+    'success' => '✅',
+    'warning' => '⚠️',
+    'info'    => 'ℹ️',
+    'danger'  => '❌'
+];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nombre = $_POST['nombre'];
@@ -12,34 +19,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fecha_updated = date("Y-m-d H:i:s");
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Formato de email inválido.";
+        $error[] = ['msg' => "Formato de email inválido.", 'tipo' => 'warning'];
     } else {
         $email = strtolower($email);
-        $error = "";
     }
     if ($_POST['password'] !== $_POST['confirm_password']) {
-        $error = "Las contraseñas no coinciden.";
+        $error[] = ['msg' =>  "Las contraseñas no coinciden.", 'tipo' => 'warning'];
     } else {
         $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        $error = "";
     }
 
     $sql = "INSERT INTO usuarios (nombre, email, contrasenha, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
-if ($stmt) {
-    $stmt->bind_param("sssss", $nombre, $email, $password, $fecha_created, $fecha_updated);
+    if ($stmt) {
+        $stmt->bind_param("sssss", $nombre, $email, $password, $fecha_created, $fecha_updated);
 
-    if ($stmt->execute()) {
-        header("Location: index.php");
-        exit();
+        if ($stmt->execute()) {
+            header("Location: index.php");
+            exit();
+        } else {
+            $error[] = ['msg' => "Error al registrar: " . $stmt->error, 'tipo' => 'danger'];
+        }
     } else {
-        $error = "Error al registrar: " . $stmt->error;
+        $error[] = ['msg' => "Error en la preparación de la consulta: " . $conn->error, 'tipo' => 'danger'];
     }
-} else {
-    $error = "Error en la preparación de la consulta: " . $conn->error;
-}
-    
 }
 ?>
 <div class="row justify-content-center">
@@ -77,16 +81,14 @@ if ($stmt) {
 <?php if (!empty($error)): ?>
     <div class="card mt-3 shadow-sm">
         <div class="card-body">
-            <?php if ($error == "Formato de email inválido."||  $error == "Las contraseñas no coinciden."): ?>
-                <div class="alert alert-warning mb-0">
-                    ⚠️ <?= $error ?>
+            <?php foreach ($error as $e): ?>
+                <div class="alert alert-<?= $e['tipo'] ?> d-flex align-items-center">
+                    <?= $icons[$e['tipo']] ?? '❓' ?>
+                    <span class="ms-2"><?= $e['msg'] ?></span>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-danger mb-0">
-                    ❌ <?= $error ?>
-                </div>
-            <?php endif; ?>
+            <?php endforeach; ?>
         </div>
+    </div>
     </div>
 <?php endif; ?>
 <?php include("footer.php"); ?>

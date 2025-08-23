@@ -5,13 +5,6 @@ include("header.php");
 
 $error = [];
 $tarea = null; // Inicializar
-$icons = [
-    'success' => '✅',
-    'warning' => '⚠️',
-    'info'    => 'ℹ️',
-    'danger'  => '❌'
-];
-
 
 // Verificar usuario
 if (!isset($_SESSION['usuario_id'])) {
@@ -100,8 +93,8 @@ if (isset($stmt)) $stmt->close();
 <?php if (!empty($error)): ?>
     <div class="mt-3">
         <?php foreach ($error as $e): ?>
-            <div class="alert alert-<?= $e['tipo'] ?> d-flex align-items-center">
-                <?= $icons[$e['tipo']] ?? '❓' ?>
+            <div class="alert alert-<?= $e['tipo'] ?> mb-2 d-flex align-items-center">
+                <?= ($e['tipo'] == 'warning') ? '⚠️' : '❌' ?> 
                 <span class="ms-2"><?= $e['msg'] ?></span>
             </div>
         <?php endforeach; ?>

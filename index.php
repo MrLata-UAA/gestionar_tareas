@@ -15,10 +15,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $usuario = $result->fetch_assoc();
 
-       /*  echo "<pre>".$usuario['contrasenha']."</pre>";
-        echo "<pre>".password_hash($contra, PASSWORD_DEFAULT)."</pre>";
-        //var_dump(password_verify($contra, $usuario['contrasenha'])); */
-       
           if (password_verify($contra, $usuario['contrasenha'])) {
             $_SESSION['usuario_id'] = $usuario['id'];
             $_SESSION['nombre'] = $usuario['nombre'];

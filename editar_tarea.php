@@ -14,12 +14,7 @@ $transiciones_validas = [
     'completada'  => ['completada'] // no puede cambiar
 ];
 
-$icons = [
-    'success' => '✅',
-    'warning' => '⚠️',
-    'info'    => 'ℹ️',
-    'danger'  => '❌'
-];
+
 
 // Verificar usuario
 if (!isset($_SESSION['usuario_id'])) {
